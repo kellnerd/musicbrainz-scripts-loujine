@@ -38,32 +38,6 @@ function replaceSubworksTitles() {
         const mbid = helper.mbidFromURL(node.href);
         const url = edits.urlFromMbid('work', mbid);
 
-        function success(xhr) {
-            const $status = $('#replace' + _idx);
-            const rx = new RegExp(
-                '/edit/(\\d+)">edit</a>'
-            ).exec(xhr.responseText);
-            if (rx === null) {
-                // usually means the POST was accepted but nothing was changed
-                // i.e. the attributes names are wrong
-                $status.text(
-                    'Edit was probably not applied, please check'
-                ).parent().css('color', 'red');
-                return;
-            }
-            const editId = rx[1];
-            $status.parent().css('color', 'green');
-            $status.after(
-                $('<p>').append(
-                    '<a href="/edit/' + editId + '" target="_blank">edit ' + editId + '</a>'
-                )
-            )
-        }
-        function fail(xhr) {
-            $('#replace' + _idx).text(
-                'Error (code ' + xhr.status + ')'
-            ).parent().css('color', 'red');
-        }
         function callback(editData) {
             $('#replace' + _idx).text('Sending edit data');
             editData.name = name;
@@ -74,8 +48,8 @@ function replaceSubworksTitles() {
             requests.POST(
                 url,
                 edits.formatEdit('edit-work', postData),
-                success,
-                fail
+                (xhr) => success(xhr, _idx),
+                (xhr) => fail(xhr, _idx)
             );
         }
         setTimeout(function () {
@@ -94,33 +68,6 @@ function replaceSubworksDisambiguations(comment) {
             .find('a[href*="/work/"]').each(function (_idx, node) {
         const mbid = helper.mbidFromURL(node.href);
 
-        function success(xhr) {
-            const $status = $('#replace' + _idx);
-            $status.parent().css('color', 'green');
-            const rx = new RegExp(
-                '/edit/(\\d+)">edit</a>'
-            ).exec(xhr.responseText);
-            if (rx === null) {
-                // usually means the POST was accepted but nothing was changed
-                // i.e. the attributes names are wrong
-                $status.text(
-                    'Edit was probably not applied, please check'
-                ).parent().css('color', 'red');
-                return;
-            }
-            const editId = rx[1];
-            $status.parent().css('color', 'green');
-            $status.after(
-                $('<p>').append(
-                    '<a href="/edit/' + editId + '" target="_blank">edit ' + editId + '</a>'
-                )
-            )
-        }
-        function fail(xhr) {
-            $('#replace' + _idx).text(
-                'Error (code ' + xhr.status + ')'
-            ).parent().css('color', 'red');
-        }
         function callback(editData) {
             $('#replace' + _idx).text(' (' + comment + ')');
             $('#replace' + _idx).siblings('.comment').hide(); // hide old disambiguation
@@ -131,8 +78,8 @@ function replaceSubworksDisambiguations(comment) {
             requests.POST(
                 edits.urlFromMbid('work', mbid),
                 edits.formatEdit('edit-work', postData),
-                success,
-                fail
+                (xhr) => success(xhr, _idx),
+                (xhr) => fail(xhr, _idx)
             );
         }
         setTimeout(function () {
@@ -153,6 +100,36 @@ function setSubworksAttributes(attrIdx) {
             $('.rel-editor-dialog button.positive').click();
         }
     );
+}
+
+
+function success(xhr, idx) {
+    const $status = $('#replace' + idx);
+    const rx = new RegExp(
+        '/edit/(\\d+)">edit</a>'
+    ).exec(xhr.responseText);
+    if (rx === null) {
+        // usually means the POST was accepted but nothing was changed
+        // i.e. the attributes names are wrong
+        $status.text(
+            'Edit was probably not applied, please check'
+        ).parent().css('color', 'red');
+        return;
+    }
+    const editId = rx[1];
+    $status.parent().css('color', 'green');
+    $status.after(
+        $('<p>').append(
+            '<a href="/edit/' + editId + '" target="_blank">edit ' + editId + '</a>'
+        )
+    )
+}
+
+
+function fail(xhr, idx) {
+    $('#replace' + idx).text(
+        'Error (code ' + xhr.status + ')'
+    ).parent().css('color', 'red');
 }
 
 
