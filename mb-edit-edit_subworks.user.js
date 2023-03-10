@@ -4,7 +4,7 @@
 // @name         MusicBrainz edit: Replace subwork titles, disambiguations and attributes in Work edit page
 // @namespace    mbz-loujine
 // @author       loujine
-// @version      2023.3.9
+// @version      2023.3.10
 // @downloadURL  https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-edit-edit_subworks.user.js
 // @updateURL    https://raw.githubusercontent.com/loujine/musicbrainz-scripts/master/mb-edit-edit_subworks.user.js
 // @supportURL   https://github.com/loujine/musicbrainz-scripts
@@ -67,6 +67,7 @@ function replaceSubworksDisambiguations(comment) {
     $('table label:contains("parts:")').parents('tr')
             .find('a[href*="/work/"]').each(function (_idx, node) {
         const mbid = helper.mbidFromURL(node.href);
+        const url = edits.urlFromMbid('work', mbid);
 
         function callback(editData) {
             $('#replace' + _idx).text(' (' + comment + ')');
@@ -76,7 +77,7 @@ function replaceSubworksDisambiguations(comment) {
             postData.edit_note = sidebar.editNote(GM_info.script);
             console.info('Data ready to be posted: ', postData);
             requests.POST(
-                edits.urlFromMbid('work', mbid),
+                url,
                 edits.formatEdit('edit-work', postData),
                 (xhr) => success(xhr, _idx),
                 (xhr) => fail(xhr, _idx)
@@ -85,7 +86,7 @@ function replaceSubworksDisambiguations(comment) {
         setTimeout(function () {
             $(node).after('<span id="replace' + _idx + '">' +
                           'Fetching required data</span>');
-            edits.getWorkEditParams(helper.wsUrl('work', [], mbid), callback);
+            edits.getWorkEditParams(url, callback);
         }, 2 * idx * server.timeout);
         idx += 1;
     });
